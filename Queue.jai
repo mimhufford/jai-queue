@@ -4,7 +4,7 @@ Queue :: struct (type: Type) {
     allocator : Allocator;
 }
 
-enqueue :: (using queue: *Queue, value: queue.type) {
+push_back :: (using queue: *Queue, value: queue.type) {
     defer write, count += 1;
 
     bytes := size_of(type);
