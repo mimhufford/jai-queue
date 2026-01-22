@@ -11,7 +11,6 @@ push_back :: (using queue: *Queue, value: queue.type) {
         // adding the first ever value so need to allocate memory
         capacity = 8;
         data = alloc(capacity * bytes,, allocator);
-        data.(*type).* = value;
     } else if count == capacity {
         // the queue is full, double the size and copy values contiguously to the start of the new memory
         wrapped_read := read  % capacity;
@@ -21,13 +20,9 @@ push_back :: (using queue: *Queue, value: queue.type) {
         free(data,, allocator);
         data = new_data;
         read, write, capacity = 0, capacity, capacity * 2;
-        (data + write * bytes).(*type).* = value;
-    } else {
-        // there's room, add at the write position
-        wrapped_write := write % capacity;
-        (data + wrapped_write * bytes).(*type).* = value;
     }
 
+    (data + (write % capacity) * bytes).(*type).* = value;
     write, count += 1;
 }
 
