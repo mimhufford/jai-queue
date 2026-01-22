@@ -1,6 +1,7 @@
 Queue :: struct (type: Type) {
     data : *void;
     read, write, capacity, count := 0;
+    allocator : Allocator;
 }
 
 enqueue :: (using queue: *Queue, value: queue.type) {
@@ -11,7 +12,7 @@ enqueue :: (using queue: *Queue, value: queue.type) {
     if !data {
         // adding the first ever value so need to allocate memory
         capacity = 8;
-        data = alloc(capacity * bytes);
+        data = alloc(capacity * bytes,, allocator);
         data.(*type).* = value;
         return;
     }
@@ -31,10 +32,10 @@ enqueue :: (using queue: *Queue, value: queue.type) {
     }
 
     // the queue is full, double the size and copy values contiguously to the start of the new memory
-    new_data := alloc(capacity * 2 * bytes);
+    new_data := alloc(capacity * 2 * bytes,, allocator);
     memcpy(new_data, data + (read * bytes), (capacity - read) * bytes);
     memcpy(new_data + (capacity - read) * bytes, data, read * bytes);
-    free(data);
+    free(data,, allocator);
     data = new_data;
     read, write, capacity = 0, capacity, capacity * 2;
     (data + write * bytes).(*type).* = value;
