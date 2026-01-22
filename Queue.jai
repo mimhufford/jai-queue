@@ -41,10 +41,18 @@ push_back :: (using queue: *Queue, value: queue.type) {
     (data + write * bytes).(*type).* = value;
 }
 
-dequeue :: (using queue: *Queue) -> queue.type {
+pop_front :: (using queue: *Queue) -> queue.type {
     assert(count > 0);
     result := (data + read * size_of(type)).(*type).*;
-    read += 1;
+    read = (read + 1) % capacity;
+    count -= 1;
+    return result;
+}
+
+pop_back :: (using queue: *Queue) -> queue.type {
+    assert(count > 0);
+    write -= 1;
+    result := (data + (write % capacity) * size_of(type)).(*type).*;
     count -= 1;
     return result;
 }
