@@ -5,8 +5,6 @@ Queue :: struct (type: Type) {
 }
 
 push_back :: (using queue: *Queue, value: queue.type) {
-    defer write, count += 1;
-
     bytes := size_of(type);
 
     if !data {
@@ -14,37 +12,29 @@ push_back :: (using queue: *Queue, value: queue.type) {
         capacity = 8;
         data = alloc(capacity * bytes,, allocator);
         data.(*type).* = value;
-        return;
-    }
-    
-    if write < capacity {
-        // there's room at the end of the allocated memory, so copy the value there
+    } else if count == capacity {
+        // the queue is full, double the size and copy values contiguously to the start of the new memory
+        wrapped_read := read  % capacity;
+        new_data := alloc(capacity * 2 * bytes,, allocator);
+        memcpy(new_data, data + (wrapped_read * bytes), (capacity - wrapped_read) * bytes);
+        memcpy(new_data + (capacity - wrapped_read) * bytes, data, wrapped_read * bytes);
+        free(data,, allocator);
+        data = new_data;
+        read, write, capacity = 0, capacity, capacity * 2;
         (data + write * bytes).(*type).* = value;
-        return;
-    }
-
-    wrapped_write := write % capacity;
-
-    if wrapped_write < read {
-        // there's a dequeued value at the start which we can overwrite
+    } else {
+        // there's room, add at the write position
+        wrapped_write := write % capacity;
         (data + wrapped_write * bytes).(*type).* = value;
-        return;
     }
 
-    // the queue is full, double the size and copy values contiguously to the start of the new memory
-    new_data := alloc(capacity * 2 * bytes,, allocator);
-    memcpy(new_data, data + (read * bytes), (capacity - read) * bytes);
-    memcpy(new_data + (capacity - read) * bytes, data, read * bytes);
-    free(data,, allocator);
-    data = new_data;
-    read, write, capacity = 0, capacity, capacity * 2;
-    (data + write * bytes).(*type).* = value;
+    write, count += 1;
 }
 
 pop_front :: (using queue: *Queue) -> queue.type {
     assert(count > 0);
-    result := (data + read * size_of(type)).(*type).*;
-    read = (read + 1) % capacity;
+    result := (data + (read % capacity) * size_of(type)).(*type).*;
+    read += 1;
     count -= 1;
     return result;
 }
@@ -52,8 +42,8 @@ pop_front :: (using queue: *Queue) -> queue.type {
 pop_back :: (using queue: *Queue) -> queue.type {
     assert(count > 0);
     write -= 1;
-    result := (data + (write % capacity) * size_of(type)).(*type).*;
     count -= 1;
+    result := (data + (write % capacity) * size_of(type)).(*type).*;
     return result;
 }
 
