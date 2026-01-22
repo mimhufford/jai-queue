@@ -6,8 +6,9 @@ Queue :: struct (type: Type) {
 
 push_front :: (using queue: *Queue, value: queue.type) {
     ensure_capacity(queue);
-    front = (front - 1 + capacity) % capacity;
+    front -= 1;
     count += 1;
+    if front < 0 then front, back += capacity;
     (data + (front % capacity) * size_of(type)).(*type).* = value;
 }
 
@@ -41,7 +42,7 @@ reset_keeping_memory :: (using queue: *Queue) {
 for_expansion :: (using queue: *Queue, body: Code, flags: For_Flags) #expand {
     `it_index := 0;
 
-    for <=(flags & .REVERSE > 0) index: front..front+count-1 {
+    for <=(flags & .REVERSE > 0) index: front..back-1 {
         item := (data + (index % capacity) * size_of(type)).(*type);
         `it := #ifx flags & .POINTER then item else item.*;
         #insert (remove=#assert(false)) body;
