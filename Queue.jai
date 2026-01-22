@@ -49,17 +49,10 @@ reset_keeping_memory :: (using queue: *Queue) {
 for_expansion :: (using queue: *Queue, body: Code, flags: For_Flags) #expand {
     `it_index := 0;
 
-    for <=(flags & .REVERSE > 0) read..write-1 {
-        item := (data + (it % capacity) * size_of(type)).(*type);
-
-        #if flags & .POINTER {
-            `it := item;
-        } else {
-            `it := item.*;
-        }
-
+    for <=(flags & .REVERSE > 0) index: read..write-1 {
+        item := (data + (index % capacity) * size_of(type)).(*type);
+        `it := #ifx flags & .POINTER then item else item.*;
         #insert (remove=#assert(false)) body;
-
         it_index += 1;
     }
 }
