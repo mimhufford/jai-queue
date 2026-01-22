@@ -49,6 +49,10 @@ dequeue :: (using queue: *Queue) -> queue.type {
     return result;
 }
 
+reset_keeping_memory :: (using queue: *Queue) {
+    read, write, count = 0;
+}
+
 for_expansion :: (using queue: *Queue, body: Code, flags: For_Flags) #expand {
     `it_index := 0;
 
