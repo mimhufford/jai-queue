@@ -13,7 +13,7 @@ push_back :: (using queue: *Queue, value: queue.type) {
         data = alloc(capacity * bytes,, allocator);
     } else if count == capacity {
         // the queue is full, double the size and copy values contiguously to the start of the new memory
-        wrapped_read := read  % capacity;
+        wrapped_read := read % capacity;
         new_data := alloc(capacity * 2 * bytes,, allocator);
         memcpy(new_data, data + (wrapped_read * bytes), (capacity - wrapped_read) * bytes);
         memcpy(new_data + (capacity - wrapped_read) * bytes, data, wrapped_read * bytes);
