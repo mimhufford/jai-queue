@@ -1,21 +1,19 @@
 Queue :: struct (type: Type) {
     data : *void;
-    front, back, capacity, count := 0;
+    front, count, capacity := 0;
     allocator : Allocator;
 }
 
 push_front :: (using queue: *Queue, value: queue.type) {
     ensure_capacity(queue);
-    front -= 1;
+    front = (front - 1 + capacity) % capacity;
     count += 1;
-    if front < 0 then front, back += capacity;
     (data + (front % capacity) * size_of(type)).(*type).* = value;
 }
 
 push_back :: (using queue: *Queue, value: queue.type) {
     ensure_capacity(queue);
-    (data + (back % capacity) * size_of(type)).(*type).* = value;
-    back += 1;
+    (data + ((front + count) % capacity) * size_of(type)).(*type).* = value;
     count += 1;
 }
 
@@ -29,20 +27,19 @@ pop_front :: (using queue: *Queue) -> queue.type {
 
 pop_back :: (using queue: *Queue) -> queue.type {
     assert(count > 0);
-    back -= 1;
     count -= 1;
-    result := (data + (back % capacity) * size_of(type)).(*type).*;
+    result := (data + ((front + count) % capacity) * size_of(type)).(*type).*;
     return result;
 }
 
 reset_keeping_memory :: (using queue: *Queue) {
-    front, back, count = 0;
+    front, count = 0;
 }
 
 for_expansion :: (using queue: *Queue, body: Code, flags: For_Flags) #expand {
     `it_index := 0;
 
-    for <=(flags & .REVERSE > 0) index: front..back-1 {
+    for <=(flags & .REVERSE > 0) index: front..front+count-1 {
         item := (data + (index % capacity) * size_of(type)).(*type);
         `it := #ifx flags & .POINTER then item else item.*;
         #insert (remove=#assert(false)) body;
@@ -67,7 +64,7 @@ ensure_capacity :: (using queue: *Queue) {
         memcpy(new_data + (capacity - wrapped_front) * bytes, data, wrapped_front * bytes);
         free(data,, allocator);
         data = new_data;
-        front, back, capacity = 0, capacity, capacity * 2;
+        front, capacity = 0, capacity * 2;
     }
 }
 
